@@ -97,15 +97,10 @@ jobs:
         
         
         
-      - name: Debug SSH secret
-        run: |
-          echo "Length: ${#KEY}"
-          echo "$KEY" | head -1
-        env:
-          KEY: ${{ secrets.EC2_SSH_KEY }}  
+     
       
 
-            - name: Validate EC2_SSH_KEY
+      - name: Validate EC2_SSH_KEY
         shell: bash
         env:
           KEY: ${{ secrets.EC2_SSH_KEY }}
