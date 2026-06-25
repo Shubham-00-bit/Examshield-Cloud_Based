@@ -1182,6 +1182,7 @@ def dbadmin_sql():
 # ══════════════════════════════════════════════════
 #  STATIC
 # ══════════════════════════════════════════════════
+sed -i 's|@app.route("/")|@app.route("/health")\ndef health():\n    return {"status": "ok"}, 200\n\n@app.route("/")|' backend/app.py
 @app.route("/")
 def landing():
     return send_from_directory(os.path.join(FRONTEND_DIR,"landing"),"index.html")
@@ -1189,6 +1190,11 @@ def landing():
 @app.route("/university")
 def university_portal():
     return send_from_directory(os.path.join(FRONTEND_DIR,"university"),"index.html")
+
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
+
 
 @app.route("/candidate")
 def candidate_portal():
