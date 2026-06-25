@@ -36,10 +36,9 @@ def test_root_returns_200_or_redirect(client):
 
 
 def test_login_page_loads(client):
-    """Login route must be reachable (GET)."""
-    response = client.get("/login")
+    """University portal must be reachable (GET)."""
+    response = client.get("/university")
     assert response.status_code in (200, 301, 302)
-
 
 def test_404_handled(client):
     """App should return 404 for unknown routes, not crash."""
