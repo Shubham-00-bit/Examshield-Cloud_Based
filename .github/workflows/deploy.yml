@@ -108,15 +108,15 @@ jobs:
                 ${{ steps.login-ecr.outputs.registry }}
 
             # Update image tag in env
-            cd /home/ubuntu/examshield
+            cd /home/ubuntu/Examshield-Cloud_Based
             echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> .env
             echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> .env
             echo "ECR_REPO=${{ env.ECR_REPO }}" >> .env
 
             # Zero-downtime rolling deploy
-            docker-compose pull backend
-            docker-compose up -d --no-deps backend
-            docker-compose up -d --no-deps nginx
+            dockercompose pull backend
+            docker compose up -d --no-deps backend
+            docker ompose up -d --no-deps nginx
 
             # Health check — wait up to 30s
             for i in $(seq 1 6); do
