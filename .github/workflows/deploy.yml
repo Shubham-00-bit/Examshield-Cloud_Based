@@ -6,7 +6,7 @@ on:
   workflow_dispatch:        # Manual trigger — useful for recruiter demos
 
 env:
-  AWS_REGION:    ap-south-1
+  AWS_REGION:    us-east-2
   ECR_REPO:      examshield
   IMAGE_TAG:     ${{ github.sha }}
 
