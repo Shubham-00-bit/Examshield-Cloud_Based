@@ -105,22 +105,17 @@ jobs:
         env:
           KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          echo "Length: ${#KEY}"
+          cat > key.pem <<EOF
+${KEY}
+EOF
 
-          if [ -z "$KEY" ]; then
-            echo "ERROR: Secret is empty"
-            exit 1
-          fi
-
-          printf "%s" "$KEY" > key.pem
+          chmod 600 key.pem
 
           echo "First line:"
           head -1 key.pem
 
           echo "Last line:"
           tail -1 key.pem
-
-          chmod 600 key.pem
 
           ssh-keygen -y -f key.pem >/dev/null
 
