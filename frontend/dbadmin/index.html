@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ExamShield — DB Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #21262d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --code: #161b22;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; font-size:13px; }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+  }
+  .login-wrap {
+    width:340px; padding:36px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  }
+  .login-wrap h1 { font-size:14px; font-weight:500; color:var(--muted); margin-bottom:4px; letter-spacing:1px; }
+  .login-wrap h2 { font-size:20px; font-weight:500; margin-bottom:28px; color:var(--text); }
+  .warn-box {
+    background: rgba(210,153,34,0.1); border:1px solid rgba(210,153,34,0.3);
+    border-radius:6px; padding:10px 14px; font-size:11px; color:var(--yellow);
+    margin-bottom:20px; line-height:1.6;
+  }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:10px; letter-spacing:1px; color:var(--muted); margin-bottom:5px; text-transform:uppercase; }
+  .field input {
+    width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border);
+    border-radius:6px; font-size:13px; color:var(--text); font-family:inherit; outline:none;
+    transition:border-color 0.2s;
+  }
+  .field input:focus { border-color:var(--accent); }
+  .btn { padding:10px 18px; border:none; border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all 0.2s; letter-spacing:0.3px; }
+  .btn-accent { background:var(--accent); color:#0d1117; }
+  .btn-accent:hover { opacity:0.85; }
+  .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--muted); }
+  .btn-ghost:hover { border-color:var(--text); color:var(--text); }
+  .btn-danger { background:rgba(248,81,73,0.1); border:1px solid rgba(248,81,73,0.3); color:var(--red); }
+  .btn-danger:hover { background:rgba(248,81,73,0.18); }
+  .btn-sm { padding:5px 12px; font-size:11px; }
+  .err-msg { font-size:11px; color:var(--red); margin-top:8px; }
+
+  /* ── LAYOUT ── */
+  #app { display:none; min-height:100vh; }
+  #app.active { display:flex; }
+
+  /* TOP BAR */
+  .topbar {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    height:48px; background:var(--surface); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; padding:0 16px; gap:16px;
+  }
+  .topbar-logo { font-size:12px; font-weight:500; color:var(--muted); letter-spacing:1px; }
+  .topbar-logo span { color:var(--red); }
+  .topbar-sep { color:var(--border); }
+  .topbar-info { font-size:11px; color:var(--muted); flex:1; }
+  .status-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); margin-right:6px; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:200px; min-height:calc(100vh - 48px); margin-top:48px;
+    background:var(--surface); border-right:1px solid var(--border);
+    position:sticky; top:48px; height:calc(100vh - 48px); overflow-y:auto;
+    flex-shrink:0;
+  }
+  .sb-section { padding:12px 12px 4px; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+  .table-btn {
+    display:flex; align-items:center; gap:8px;
+    width:100%; padding:8px 12px; background:none; border:none;
+    color:var(--muted); font-size:12px; font-family:inherit; cursor:pointer;
+    text-align:left; border-radius:4px; margin:1px 4px; width:calc(100% - 8px);
+    transition:all 0.15s;
+  }
+  .table-btn:hover { background:rgba(255,255,255,0.04); color:var(--text); }
+  .table-btn.active { background:rgba(88,166,255,0.1); color:var(--accent); }
+  .table-btn .t-icon { font-size:13px; }
+  .table-btn .t-count { margin-left:auto; font-size:10px; background:rgba(255,255,255,0.06); padding:1px 6px; border-radius:10px; }
+
+  /* MAIN */
+  .main { flex:1; margin-top:48px; overflow:auto; display:flex; flex-direction:column; }
+
+  /* TOOLBAR */
+  .toolbar {
+    padding:12px 20px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--surface);
+  }
+  .toolbar-title { font-size:13px; font-weight:500; color:var(--text); flex:1; }
+  .search-box {
+    padding:6px 10px; background:var(--bg); border:1px solid var(--border);
+    border-radius:6px; font-size:12px; color:var(--text); font-family:inherit;
+    outline:none; width:220px; transition:border-color 0.2s;
+  }
+  .search-box:focus { border-color:var(--accent); }
+
+  /* SQL AREA */
+  .sql-area { padding:16px 20px; border-bottom:1px solid var(--border); background:var(--bg); }
+  .sql-label { font-size:10px; letter-spacing:1px; color:var(--muted); margin-bottom:6px; }
+  .sql-input {
+    width:100%; padding:10px 12px; background:var(--surface); border:1px solid var(--border);
+    border-radius:6px; font-size:12px; color:var(--text); font-family:inherit;
+    outline:none; resize:vertical; min-height:60px; transition:border-color 0.2s;
+  }
+  .sql-input:focus { border-color:var(--accent); }
+  .sql-bar { display:flex; gap:8px; margin-top:8px; align-items:center; }
+  .sql-hint { font-size:10px; color:var(--muted); flex:1; }
+
+  /* TABLE */
+  .table-wrap { flex:1; overflow:auto; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  thead th {
+    background:var(--surface); padding:8px 14px; text-align:left;
+    font-size:10px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--muted); border-bottom:1px solid var(--border);
+    position:sticky; top:0; white-space:nowrap;
+  }
+  tbody tr { border-bottom:1px solid var(--border); }
+  tbody tr:hover { background:rgba(255,255,255,0.02); }
+  td { padding:8px 14px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  td.wrap { white-space:normal; max-width:320px; word-break:break-all; color:var(--muted); font-size:11px; }
+
+  /* STATUS PILLS */
+  .pill { display:inline-block; padding:2px 8px; border-radius:12px; font-size:10px; font-weight:500; }
+  .pill-green { background:rgba(63,185,80,0.15); color:var(--green); }
+  .pill-blue  { background:rgba(88,166,255,0.15); color:var(--accent); }
+  .pill-red   { background:rgba(248,81,73,0.15); color:var(--red); }
+  .pill-gray  { background:rgba(255,255,255,0.06); color:var(--muted); }
+
+  /* EMPTY + LOADING */
+  .empty-state { text-align:center; padding:60px; color:var(--muted); }
+  .empty-state .es-icon { font-size:36px; margin-bottom:12px; }
+  .empty-state p { font-size:12px; }
+  .loading { display:flex; align-items:center; gap:8px; color:var(--muted); padding:20px; font-size:12px; }
+  .loading::before { content:''; width:12px; height:12px; border:1.5px solid var(--muted); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:20px; right:20px; z-index:999; padding:10px 16px; border-radius:7px; font-size:12px; display:none; }
+  .toast-ok  { background:#1c2a1e; border:1px solid rgba(63,185,80,0.4); color:var(--green); }
+  .toast-err { background:#2a1c1c; border:1px solid rgba(248,81,73,0.4); color:var(--red); }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <h1>EXAMSHIELD</h1>
+    <h2>DB Admin Panel</h2>
+    <div class="warn-box">⚠ Restricted access. This panel provides full database visibility. Authorized personnel only.</div>
+    <div class="field">
+      <label>Admin Password</label>
+      <input type="password" id="db-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doDbLogin()"/>
+    </div>
+    <div id="db-err" class="err-msg"></div>
+    <button class="btn btn-accent" style="width:100%;margin-top:16px" onclick="doDbLogin()">Access Database →</button>
+    <a href="/" style="display:block;text-align:center;margin-top:14px;font-size:11px;color:var(--muted);text-decoration:none">← Back to Home</a>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">EXAMSHIELD <span>// DB ADMIN</span></div>
+    <div class="topbar-sep">|</div>
+    <div class="topbar-info"><span class="status-dot"></span><span id="topbar-status">Connected</span></div>
+    <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="sidebar">
+    <div class="sb-section">Tables</div>
+    <div id="table-nav"></div>
+    <div class="sb-section" style="margin-top:12px">Tools</div>
+    <button class="table-btn" onclick="showSql()">
+      <span class="t-icon">⚡</span> SQL Query
+    </button>
+  </div>
+
+  <div class="main">
+    <div class="toolbar">
+      <div class="toolbar-title" id="toolbar-title">Select a table</div>
+      <input class="search-box" id="search-box" placeholder="Filter rows..." oninput="filterRows()" style="display:none"/>
+      <button class="btn btn-ghost btn-sm" id="refresh-btn" onclick="refreshCurrentTable()" style="display:none">↺ Refresh</button>
+    </div>
+
+    <div class="sql-area" id="sql-area" style="display:none">
+      <div class="sql-label">SQL QUERY (SELECT only)</div>
+      <textarea class="sql-input" id="sql-input" placeholder="SELECT * FROM students WHERE exam_type = 'NEET' LIMIT 50"></textarea>
+      <div class="sql-bar">
+        <button class="btn btn-accent btn-sm" onclick="runSql()">▶ Run</button>
+        <span class="sql-hint">Only SELECT statements allowed</span>
+      </div>
+    </div>
+
+    <div class="table-wrap" id="table-wrap">
+      <div class="empty-state">
+        <div class="es-icon">🗄️</div>
+        <p>Select a table from the sidebar to view data</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentTable = null;
+let allRows = [];
+let allCols = [];
+let isSqlMode = false;
+
+const TABLE_ICONS = {
+  university:'🏛️', exams:'📋', questions:'❓', batches:'📅',
+  students:'👤', logs:'📝', exam_sessions:'📊', results:'🏆'
+};
+const LOG_BADGES = {
+  EXAM_SUBMIT: ['pill-green','✓ SUBMIT'],
+  EXAM_START:  ['pill-blue','▶ START'],
+  LOGIN:       ['pill-blue','🔑 LOGIN'],
+  LOGIN_FAIL:  ['pill-red','✗ FAIL'],
+  SIGNUP:      ['pill-green','✨ SIGNUP'],
+  DEVICE_MISMATCH: ['pill-red','⚠ MISMATCH'],
+};
+
+async function doDbLogin() {
+  const pass = document.getElementById('db-pass').value;
+  const err  = document.getElementById('db-err');
+  if (!pass) { err.textContent = 'Password required'; return; }
+  try {
+    const r = await fetch('/api/dbadmin/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password: pass }), credentials:'include'
+    });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').classList.add('active');
+      loadTableList();
+    } else {
+      err.textContent = d.error || 'Wrong password';
+    }
+  } catch { err.textContent = 'Cannot connect to server'; }
+}
+
+async function doLogout() {
+  await fetch('/api/dbadmin/logout', { method:'POST', credentials:'include' });
+  location.reload();
+}
+
+async function loadTableList() {
+  try {
+    const r = await fetch('/api/dbadmin/tables', { credentials:'include' });
+    const tables = await r.json();
+    const nav = document.getElementById('table-nav');
+    nav.innerHTML = tables.map(t => `
+      <button class="table-btn" id="tbtn-${t}" onclick="loadTable('${t}')">
+        <span class="t-icon">${TABLE_ICONS[t]||'📄'}</span>
+        ${t}
+        <span class="t-count" id="tcount-${t}">...</span>
+      </button>`).join('');
+    // Load counts
+    tables.forEach(async t => {
+      try {
+        const r2 = await fetch(`/api/dbadmin/table/${t}`, { credentials:'include' });
+        const d = await r2.json();
+        const el = document.getElementById(`tcount-${t}`);
+        if (el) el.textContent = d.rows?.length || 0;
+      } catch {}
+    });
+  } catch { toast('Error loading tables', 'err'); }
+}
+
+async function loadTable(name) {
+  currentTable = name; isSqlMode = false;
+  document.querySelectorAll('.table-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`tbtn-${name}`);
+  if (btn) btn.classList.add('active');
+  document.getElementById('toolbar-title').textContent = name;
+  document.getElementById('search-box').style.display = 'block';
+  document.getElementById('search-box').value = '';
+  document.getElementById('refresh-btn').style.display = 'block';
+  document.getElementById('sql-area').style.display = 'none';
+  document.getElementById('table-wrap').innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const r = await fetch(`/api/dbadmin/table/${name}`, { credentials:'include' });
+    const d = await r.json();
+    if (d.error) { document.getElementById('table-wrap').innerHTML = `<div class="empty-state"><div class="es-icon">❌</div><p>${d.error}</p></div>`; return; }
+    allRows = d.rows;
+    allCols = d.columns;
+    renderTable(allCols, allRows, name);
+    document.getElementById(`tcount-${name}`).textContent = allRows.length;
+  } catch { document.getElementById('table-wrap').innerHTML = '<div class="empty-state"><div class="es-icon">❌</div><p>Error loading table</p></div>'; }
+}
+
+function refreshCurrentTable() {
+  if (currentTable && !isSqlMode) loadTable(currentTable);
+}
+
+function filterRows() {
+  const q = document.getElementById('search-box').value.toLowerCase();
+  if (!q) { renderTable(allCols, allRows, currentTable); return; }
+  const filtered = allRows.filter(row =>
+    allCols.some(col => String(row[col]||'').toLowerCase().includes(q))
+  );
+  renderTable(allCols, filtered, currentTable);
+}
+
+function renderTable(cols, rows, tableName) {
+  if (!rows.length) {
+    document.getElementById('table-wrap').innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>No rows found</p></div>';
+    return;
+  }
+  const wrap = document.getElementById('table-wrap');
+  const hashCols = new Set(['paper_hash','file_hash','device_fingerprint','password']);
+  const timeCols = new Set(['created_at','registered_at','started_at','submitted_at','timestamp','published_at']);
+  wrap.innerHTML = `<table>
+    <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(row => `<tr>${cols.map(col => {
+      const val = row[col];
+      if (val === null || val === undefined) return `<td style="color:var(--muted)">NULL</td>`;
+      if (col === 'action' && tableName === 'logs') {
+        const [cls,label] = LOG_BADGES[val] || ['pill-gray', val];
+        return `<td><span class="pill ${cls}">${label}</span></td>`;
+      }
+      if (col === 'exam_type') return `<td><span class="pill ${val==='NEET'?'pill-blue':'pill-green'}">${val}</span></td>`;
+      if (col === 'submitted_at') return `<td><span class="pill ${val ? 'pill-green' : 'pill-gray'}">${val ? '✓ Submitted' : 'Pending'}</span></td>`;
+      if (hashCols.has(col) && typeof val === 'string' && val.length > 20) {
+        return `<td class="wrap" title="${val}">${val.substring(0,20)}…</td>`;
+      }
+      if (timeCols.has(col)) {
+        try {
+          const dt = new Date(val.endsWith('Z') || val.includes('+') ? val : val + 'Z');
+          return `<td style="color:var(--muted)">${dt.toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false})}</td>`;
+        } catch { return `<td style="color:var(--muted)">${val}</td>`; }
+      }
+      return `<td>${String(val).substring(0,120)}</td>`;
+    }).join('')}</tr>`).join('')}
+    </tbody>
+  </table>`;
+  document.getElementById('topbar-status').textContent = `${rows.length} rows · ${tableName}`;
+}
+
+function showSql() {
+  isSqlMode = true; currentTable = null;
+  document.querySelectorAll('.table-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('toolbar-title').textContent = 'SQL Query';
+  document.getElementById('search-box').style.display = 'none';
+  document.getElementById('refresh-btn').style.display = 'none';
+  document.getElementById('sql-area').style.display = 'block';
+  document.getElementById('table-wrap').innerHTML = '<div class="empty-state"><div class="es-icon">⚡</div><p>Run a SELECT query above</p></div>';
+}
+
+async function runSql() {
+  const query = document.getElementById('sql-input').value.trim();
+  if (!query) return;
+  document.getElementById('table-wrap').innerHTML = '<div class="loading">Running query...</div>';
+  try {
+    const r = await fetch('/api/dbadmin/sql', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify({ query })
+    });
+    const d = await r.json();
+    if (d.error) {
+      document.getElementById('table-wrap').innerHTML = `<div class="empty-state"><div class="es-icon">❌</div><p style="color:var(--red)">${d.error}</p></div>`;
+      return;
+    }
+    allRows = d.rows; allCols = d.columns;
+    renderTable(d.columns, d.rows, 'query');
+    document.getElementById('topbar-status').textContent = `${d.rows.length} rows returned`;
+    toast(`${d.rows.length} rows`, 'ok');
+  } catch { toast('Query failed', 'err'); }
+}
+
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast toast-${type}`;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+</script>
+</body>
+</html>

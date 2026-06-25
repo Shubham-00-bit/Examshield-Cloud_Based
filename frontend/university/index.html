@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ExamShield — University Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c10;--surface:#111318;--surface2:#181c24;
+  --border:#1f2430;--border2:#2a3040;
+  --text:#e2e8f4;--muted:#4e5a72;--muted2:#6b7a94;
+  --blue:#3b82f6;--blue2:#1d4ed8;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;
+  --sidebar-w:222px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden;}
+#login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(59,130,246,0.07) 0%,transparent 70%);pointer-events:none;}
+.login-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:0.4;pointer-events:none;}
+.login-card{position:relative;z-index:1;width:400px;padding:48px 44px;background:var(--surface);border:1px solid var(--border2);border-radius:16px;box-shadow:0 0 0 1px rgba(59,130,246,0.06),0 32px 64px rgba(0,0,0,0.5);}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:40px;}
+.login-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:8px;display:grid;place-items:center;font-size:16px;box-shadow:0 0 20px rgba(59,130,246,0.35);}
+.login-logo-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;letter-spacing:3px;}
+.login-card h2{font-size:22px;font-weight:700;margin-bottom:4px;}
+.login-card .sub{font-size:13px;color:var(--muted2);margin-bottom:32px;}
+
+/* FORM ELEMENTS */
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
+.field input,.field select{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;font-size:13px;color:var(--text);font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,0.12);}
+.field input::placeholder{color:var(--muted);}
+.field select option{background:var(--surface2);}
+
+/* BUTTONS */
+.btn{padding:10px 18px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s;}
+.btn-full{width:100%;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(59,130,246,0.3);}
+.btn-success{background:var(--green);color:#fff;}
+.btn-success:hover{filter:brightness(1.1);}
+.btn-danger{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+.btn-danger:hover{background:rgba(239,68,68,0.25);}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted2);}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:6px;}
+.err-msg{font-size:12px;color:var(--red);margin-top:8px;}
+.msg{padding:11px 16px;border-radius:8px;font-size:13px;margin-top:12px;font-weight:500;line-height:1.5;}
+.msg-ok{background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.25);}
+.msg-err{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.msg-info{background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+
+/* LAYOUT */
+#dashboard{display:none;min-height:100vh;}
+#dashboard.active{display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);min-height:100vh;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:20px 18px;border-bottom:1px solid var(--border);}
+.sb-icon{width:28px;height:28px;background:var(--blue);border-radius:6px;display:grid;place-items:center;font-size:13px;flex-shrink:0;}
+.sb-name{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;}
+.sb-nav{flex:1;padding:12px 0;}
+.sb-section{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:10px 18px 4px;margin-top:4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:13px;font-weight:500;color:var(--muted2);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;transition:all .15s;font-family:inherit;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.03);}
+.nav-item.active{color:var(--text);border-left-color:var(--blue);background:rgba(59,130,246,0.08);}
+.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.sb-footer{padding:14px 18px;border-top:1px solid var(--border);}
+.chain-badge{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:7px;background:var(--surface2);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted2);margin-bottom:10px;}
+.chain-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;}
+.chain-dot.off{background:var(--red);animation:none;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.sb-uni{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.logout-btn{width:100%;padding:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;}
+.logout-btn:hover{background:rgba(239,68,68,0.16);}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.main-header{padding:24px 32px;border-bottom:1px solid var(--border);}
+.page-title{font-size:20px;font-weight:700;}
+.page-sub{font-size:12px;color:var(--muted2);margin-top:2px;}
+.content{padding:24px 32px 48px;}
+
+/* PANELS */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:18px;}
+.card-title{font-size:15px;font-weight:700;margin-bottom:3px;}
+.card-desc{font-size:12px;color:var(--muted2);margin-bottom:18px;line-height:1.5;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
+.stat-val{font-size:32px;font-weight:700;line-height:1;margin-bottom:4px;font-family:'JetBrains Mono',monospace;}
+.stat-label{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px;}
+.stat-card.blue .stat-val{color:var(--blue);}
+.stat-card.green .stat-val{color:var(--green);}
+.stat-card.yellow .stat-val{color:var(--yellow);}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.exam-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.exam-card-title{font-size:13px;font-weight:700;margin-bottom:10px;}
+
+/* EXAM TOGGLE */
+.exam-toggle{display:inline-flex;border:1px solid var(--border2);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.etog-btn{padding:8px 20px;font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;font-family:inherit;color:var(--muted2);transition:all .15s;}
+.etog-btn.active{background:var(--blue);color:#fff;}
+
+/* FILE DROP */
+.file-drop{border:2px dashed var(--border2);border-radius:10px;padding:36px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);}
+.file-drop:hover,.file-drop.drag{border-color:var(--blue);background:rgba(59,130,246,0.05);}
+.drop-icon{font-size:28px;margin-bottom:8px;}
+.file-drop p{font-size:13px;color:var(--muted2);margin-bottom:3px;}
+.file-drop small{font-size:11px;color:var(--muted);}
+.file-chosen{font-size:12px;color:var(--green);margin-top:8px;font-weight:600;}
+
+/* TABLES */
+.tbl-wrap{border:1px solid var(--border);border-radius:10px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover td{background:rgba(255,255,255,0.012);}
+td{padding:11px 14px;vertical-align:middle;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);}
+.truncate{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;font-family:'JetBrains Mono',monospace;}
+.badge-neet{background:rgba(59,130,246,0.12);color:var(--blue);}
+.badge-jee{background:rgba(16,185,129,0.12);color:var(--green);}
+.badge-ok{background:rgba(16,185,129,0.12);color:var(--green);}
+.badge-warn{background:rgba(245,158,11,0.12);color:var(--yellow);}
+.badge-err{background:rgba(239,68,68,0.12);color:var(--red);}
+.grade-a{background:rgba(16,185,129,0.12);color:var(--green);}
+.grade-b{background:rgba(59,130,246,0.12);color:var(--blue);}
+.grade-c{background:rgba(245,158,11,0.12);color:var(--yellow);}
+.grade-f{background:rgba(239,68,68,0.12);color:var(--red);}
+
+/* SCORE BAR */
+.score-bar{height:5px;background:var(--border2);border-radius:3px;overflow:hidden;min-width:70px;}
+.score-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+
+/* BATCH ITEMS */
+.batch-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--border);border-radius:9px;margin-bottom:8px;background:var(--surface2);}
+.batch-name{font-weight:600;font-size:14px;margin-bottom:2px;}
+.batch-meta-row{font-size:11px;color:var(--muted2);font-family:'JetBrains Mono',monospace;margin-top:3px;}
+.batch-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+
+/* LOGS */
+.log-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);}
+.log-row:last-child{border-bottom:none;}
+.log-icon{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:13px;flex-shrink:0;}
+.log-icon.submit{background:rgba(16,185,129,0.12);}
+.log-icon.login{background:rgba(59,130,246,0.12);}
+.log-icon.signup{background:rgba(245,158,11,0.12);}
+.log-icon.warn{background:rgba(239,68,68,0.12);}
+.log-action{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.log-detail{font-size:11px;color:var(--muted2);margin-top:1px;}
+.log-time{font-size:10px;color:var(--muted);margin-left:auto;white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+
+/* RESULT STATS */
+.result-stats{display:flex;gap:10px;margin-bottom:18px;}
+.result-stat{flex:1;padding:14px 18px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);text-align:center;}
+.result-stat-val{font-size:26px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;margin-bottom:4px;}
+.result-stat-label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px;}
+
+/* SEARCH */
+.search-row{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+.search-input{flex:1;min-width:180px;padding:9px 13px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;font-size:13px;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s;}
+.search-input:focus{border-color:var(--blue);}
+.search-input::placeholder{color:var(--muted);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;display:none;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.4);animation:slideUp .25s ease;}
+.toast-ok{background:#0d2d1e;border:1px solid rgba(16,185,129,0.3);color:var(--green);}
+.toast-err{background:#2d0d0d;border:1px solid rgba(239,68,68,0.3);color:var(--red);}
+.toast-info{background:#0d1a2d;border:1px solid rgba(59,130,246,0.3);color:var(--blue);}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .stats-row,.grid-2,.overview-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-grid"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🛡</div>
+      <div class="login-logo-name">EXAMSHIELD</div>
+    </div>
+    <h2>University Login</h2>
+    <p class="sub">Authorized administrators only</p>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="u-user" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="u-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div id="login-err" class="err-msg"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:18px" onclick="doLogin()">Login →</button>
+    <a href="/" style="display:block;text-align:center;margin-top:14px;font-size:12px;color:var(--muted);text-decoration:none">← Back to Home</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-icon">🛡</div>
+      <div class="sb-name">EXAMSHIELD</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Overview</div>
+      <button class="nav-item active" onclick="switchPanel('overview',this)">
+        <span class="nav-icon">📊</span> Dashboard
+      </button>
+      <div class="sb-section">Exam Setup</div>
+      <button class="nav-item" onclick="switchPanel('upload',this)">
+        <span class="nav-icon">📤</span> Upload MCQ
+      </button>
+      <button class="nav-item" onclick="switchPanel('batches',this)">
+        <span class="nav-icon">🗓</span> Batches
+      </button>
+      <div class="sb-section">Students</div>
+      <button class="nav-item" onclick="switchPanel('students',this)">
+        <span class="nav-icon">👥</span> Registrations
+      </button>
+      <button class="nav-item" onclick="switchPanel('sessions',this)">
+        <span class="nav-icon">📝</span> Exam Sessions
+      </button>
+      <button class="nav-item" onclick="switchPanel('logs',this)">
+        <span class="nav-icon">📋</span> Activity Logs
+      </button>
+      <div class="sb-section">Results</div>
+      <button class="nav-item" onclick="switchPanel('results',this)">
+        <span class="nav-icon">🏆</span> Grade & Results
+      </button>
+    </nav>
+    <div class="sb-footer">
+      <div class="chain-badge">
+        <div class="chain-dot" id="chain-dot"></div>
+        <span id="chain-label">Checking...</span>
+      </div>
+      <div class="sb-uni" id="sb-uni-name">—</div>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="main-header">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="page-sub" id="page-sub">Overview of exam activity</div>
+    </div>
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="panel active" id="panel-overview">
+        <div class="stats-row">
+          <div class="stat-card blue"><div class="stat-val" id="stat-neet">—</div><div class="stat-label">NEET Students</div></div>
+          <div class="stat-card green"><div class="stat-val" id="stat-jee">—</div><div class="stat-label">JEE Students</div></div>
+          <div class="stat-card yellow"><div class="stat-val" id="stat-batches">—</div><div class="stat-label">Total Batches</div></div>
+          <div class="stat-card"><div class="stat-val" id="stat-total">—</div><div class="stat-label">Total Candidates</div></div>
+        </div>
+        <div class="overview-grid">
+          <div class="exam-card">
+            <div class="exam-card-title">🔵 NEET Exam</div>
+            <div id="neet-overview"><div style="font-size:12px;color:var(--muted)">Loading...</div></div>
+          </div>
+          <div class="exam-card">
+            <div class="exam-card-title">🟢 JEE Exam</div>
+            <div id="jee-overview"><div style="font-size:12px;color:var(--muted)">Loading...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPLOAD MCQ -->
+      <div class="panel" id="panel-upload">
+        <div class="card">
+          <div class="card-title">Upload Question Paper (CSV)</div>
+          <div class="card-desc">Required columns: question, option_a, option_b, option_c, option_d, correct_answer (must be a/b/c/d), subject (optional). Uploading replaces existing questions for that exam type.</div>
+          <div class="field" style="margin-bottom:16px">
+            <label>Exam Type</label>
+            <div class="exam-toggle" style="margin-bottom:0">
+              <button class="etog-btn active" id="utog-neet" onclick="setUploadType('NEET')">NEET</button>
+              <button class="etog-btn" id="utog-jee" onclick="setUploadType('JEE')">JEE</button>
+            </div>
+          </div>
+          <div class="file-drop" id="file-drop"
+               onclick="document.getElementById('file-input').click()"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDrop(event)">
+            <div class="drop-icon">📄</div>
+            <p>Click to select CSV or drag & drop</p>
+            <small>question, option_a–d, correct_answer (a/b/c/d), subject</small>
+            <input type="file" id="file-input" accept=".csv" style="display:none" onchange="handleFile(this)"/>
+            <div class="file-chosen" id="file-chosen"></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:14px" onclick="uploadMCQ()">⬆ Upload & Store Hash on Blockchain</button>
+          <div id="upload-msg"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Create Exam Batch</div>
+          <div class="card-desc">Set a time slot for students to register. You must upload MCQ first.</div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Exam Type</label>
+              <select id="sched-type"><option value="NEET">NEET</option><option value="JEE">JEE</option></select>
+            </div>
+            <div class="field">
+              <label>Batch Name</label>
+              <input type="text" id="sched-batch" placeholder="e.g. Morning Slot A"/>
+            </div>
+            <div class="field">
+              <label>Start Time (IST)</label>
+              <input type="datetime-local" id="sched-start"/>
+            </div>
+            <div class="field">
+              <label>Duration (minutes)</label>
+              <input type="number" id="sched-duration" value="180" min="30" max="360"/>
+            </div>
+          </div>
+          <div class="field" style="max-width:200px">
+            <label>Capacity</label>
+            <input type="number" id="sched-capacity" value="100" min="1" max="10000"/>
+          </div>
+          <button class="btn btn-success" onclick="createBatch()">Create Batch</button>
+          <div id="sched-msg"></div>
+        </div>
+      </div>
+
+      <!-- BATCHES -->
+      <div class="panel" id="panel-batches">
+        <div class="card">
+          <div class="card-title">Exam Batches</div>
+          <div class="card-desc">All scheduled batches. Download CSV for a batch roster, or send reminders to students.</div>
+          <div class="exam-toggle">
+            <button class="etog-btn active" id="btog-neet" onclick="loadBatches('NEET')">NEET</button>
+            <button class="etog-btn" id="btog-jee" onclick="loadBatches('JEE')">JEE</button>
+          </div>
+          <div id="batch-list"><div style="font-size:12px;color:var(--muted)">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div class="panel" id="panel-students">
+        <div class="card">
+          <div class="card-title">Registered Candidates</div>
+          <div class="card-desc">All students who have completed registration.</div>
+          <div class="search-row">
+            <div class="exam-toggle" style="margin-bottom:0">
+              <button class="etog-btn active" id="stog-neet" onclick="loadStudents('NEET')">NEET</button>
+              <button class="etog-btn" id="stog-jee" onclick="loadStudents('JEE')">JEE</button>
+            </div>
+            <input class="search-input" id="student-search" placeholder="Search name or email..." oninput="filterStudents()"/>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Batch</th><th>Paper Hash</th><th>Registered</th></tr></thead>
+              <tbody id="students-tbody">
+                <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">Select exam type to load</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSIONS -->
+      <div class="panel" id="panel-sessions">
+        <div class="card">
+          <div class="card-title">Exam Sessions</div>
+          <div class="card-desc">Live and completed exam sessions showing submission status and answer count.</div>
+          <div class="exam-toggle">
+            <button class="etog-btn active" id="sestog-neet" onclick="loadSessions('NEET')">NEET</button>
+            <button class="etog-btn" id="sestog-jee" onclick="loadSessions('JEE')">JEE</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Batch</th><th>Started (IST)</th><th>Submitted (IST)</th><th>Answered</th><th>Status</th></tr></thead>
+              <tbody id="sessions-tbody">
+                <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">Select exam type to load</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGS -->
+      <div class="panel" id="panel-logs">
+        <div class="card">
+          <div class="card-title">Activity Logs</div>
+          <div class="card-desc">All system events — logins, signups, submissions, anomalies.</div>
+          <div id="log-list"><div style="font-size:12px;color:var(--muted)">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="panel" id="panel-results">
+        <div class="card">
+          <div class="card-title">Grade Results</div>
+          <div class="card-desc">Select a batch and click <strong>Grade</strong>. The system reconstructs each student's shuffled paper using their unique paper hash and scores against the correct_answer from your uploaded CSV. Results appear instantly below.</div>
+          <div class="exam-toggle">
+            <button class="etog-btn active" id="rtog-neet" onclick="loadResultBatches('NEET')">NEET</button>
+            <button class="etog-btn" id="rtog-jee" onclick="loadResultBatches('JEE')">JEE</button>
+          </div>
+          <div id="result-batch-list"><div style="font-size:12px;color:var(--muted)">Loading batches...</div></div>
+          <div id="result-msg"></div>
+        </div>
+
+        <div class="card" id="results-display-card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+            <div>
+              <div class="card-title">Results</div>
+              <div style="font-size:12px;color:var(--muted2)" id="results-batch-label">Grade a batch above to see results</div>
+            </div>
+            <div class="exam-toggle" style="margin-bottom:0">
+              <button class="etog-btn active" id="rltog-neet" onclick="loadResults('NEET')">NEET</button>
+              <button class="etog-btn" id="rltog-jee" onclick="loadResults('JEE')">JEE</button>
+            </div>
+          </div>
+          <div id="results-stat-row" style="display:none" class="result-stats"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr><th>Rank</th><th>Name</th><th>Email</th><th>Batch</th><th>Score</th><th>Progress</th><th>%</th><th>Grade</th><th>Result Hash</th></tr>
+              </thead>
+              <tbody id="results-tbody">
+                <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">No results yet — grade a batch first</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+const API = '';
+let token = '';
+let selFile = null;
+let uploadType = 'NEET';
+let allStudents = [];
+
+const TITLES = {
+  overview: ['Dashboard',       'Overview of exam activity'],
+  upload:   ['Upload & Batches','Upload MCQ papers and create exam slots'],
+  batches:  ['Exam Batches',    'Manage scheduled exam slots'],
+  students: ['Registrations',   'All registered candidates'],
+  sessions: ['Exam Sessions',   'Live and completed exam sessions'],
+  logs:     ['Activity Logs',   'System events and audit trail'],
+  results:  ['Grade & Results', 'Grade submissions and view results batch-wise'],
+};
+
+function authFetch(url, opts={}) {
+  return fetch(url, {
+    ...opts,
+    headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`, ...(opts.headers||{})}
+  });
+}
+
+// ── AUTH ──
+async function doLogin() {
+  const err  = document.getElementById('login-err');
+  const user = document.getElementById('u-user').value.trim();
+  const pass = document.getElementById('u-pass').value;
+  if (!user || !pass) { err.textContent = 'Enter username and password'; return; }
+  try {
+    const r = await fetch(`${API}/api/university/login`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:user, password:pass})
+    });
+    const d = await r.json();
+    if (d.success) {
+      token = d.token;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').classList.add('active');
+      document.getElementById('sb-uni-name').textContent = d.name || 'University Admin';
+      initDashboard();
+    } else { err.textContent = d.error || 'Login failed'; }
+  } catch { err.textContent = 'Cannot connect. Is Flask running?'; }
+}
+
+async function doLogout() {
+  await authFetch(`${API}/api/university/logout`,{method:'POST'}).catch(()=>{});
+  token = '';
+  document.getElementById('dashboard').classList.remove('active');
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function initDashboard() {
+  checkChain();
+  loadStats();
+  setInterval(checkChain, 20000);
+}
+
+// ── PANEL SWITCH ──
+function switchPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`panel-${id}`).classList.add('active');
+  if (btn) btn.classList.add('active');
+  const [t, s] = TITLES[id] || [id, ''];
+  document.getElementById('page-title').textContent = t;
+  document.getElementById('page-sub').textContent   = s;
+  if (id === 'overview') loadStats();
+  if (id === 'logs')     loadLogs();
+  if (id === 'students') loadStudents('NEET');
+  if (id === 'batches')  loadBatches('NEET');
+  if (id === 'sessions') loadSessions('NEET');
+  if (id === 'results')  { loadResultBatches('NEET'); loadResults('NEET'); }
+}
+
+// ── CHAIN ──
+async function checkChain() {
+  const dot = document.getElementById('chain-dot');
+  const lbl = document.getElementById('chain-label');
+  try {
+    const r = await authFetch(`${API}/api/university/stats`);
+    if (r.ok) { dot.className='chain-dot'; lbl.textContent='Ganache OK'; }
+    else       { dot.className='chain-dot off'; lbl.textContent='Chain Error'; }
+  } catch { dot.className='chain-dot off'; lbl.textContent='Offline'; }
+}
+
+// ── STATS ──
+async function loadStats() {
+  try {
+    const r = await authFetch(`${API}/api/university/stats`);
+    const d = await r.json();
+    const neet = d.NEET?.total_registered||0, jee = d.JEE?.total_registered||0;
+    document.getElementById('stat-neet').textContent    = neet;
+    document.getElementById('stat-jee').textContent     = jee;
+    document.getElementById('stat-total').textContent   = neet+jee;
+    document.getElementById('stat-batches').textContent = (d.NEET?.batch_count||0)+(d.JEE?.batch_count||0);
+    renderExamCard('neet', d.NEET);
+    renderExamCard('jee',  d.JEE);
+  } catch {}
+}
+function renderExamCard(pfx, info) {
+  const el = document.getElementById(`${pfx}-overview`);
+  if (!info) { el.innerHTML='<div style="font-size:12px;color:var(--muted)">No data</div>'; return; }
+  el.innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <span class="badge ${info.exam_uploaded?'badge-ok':'badge-warn'}">${info.exam_uploaded?'✓ '+info.question_count+' questions':'No CSV uploaded'}</span>
+      <span class="badge badge-neet">${info.batch_count} batch(es)</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted2)">${info.total_registered} registered student(s)</div>`;
+}
+
+// ── UPLOAD MCQ ──
+function setUploadType(t) {
+  uploadType = t;
+  document.getElementById('utog-neet').className = 'etog-btn'+(t==='NEET'?' active':'');
+  document.getElementById('utog-jee').className  = 'etog-btn'+(t==='JEE' ?' active':'');
+}
+function handleFile(i) { if(i.files[0]){selFile=i.files[0];document.getElementById('file-chosen').textContent='✓ '+selFile.name;} }
+function handleDrop(e) { e.preventDefault();document.getElementById('file-drop').classList.remove('drag');selFile=e.dataTransfer.files[0];document.getElementById('file-chosen').textContent='✓ '+selFile.name; }
+
+async function uploadMCQ() {
+  if (!selFile) { toast('Select a CSV file first','err'); return; }
+  const msgEl = document.getElementById('upload-msg');
+  msgEl.innerHTML = '<div class="msg msg-info">⬆ Uploading...</div>';
+  const fd = new FormData(); fd.append('file',selFile); fd.append('exam_type',uploadType);
+  try {
+    const r = await fetch(`${API}/api/university/upload-mcq`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
+    const d = await r.json();
+    if (d.success) {
+      msgEl.innerHTML=`<div class="msg msg-ok">✓ ${d.message}<br/><span class="mono">${(d.file_hash||'').substring(0,48)}…</span></div>`;
+      toast(`${d.question_count} questions uploaded for ${uploadType}`,'ok');
+      loadStats();
+    } else { msgEl.innerHTML=`<div class="msg msg-err">✗ ${d.error}</div>`; }
+  } catch { msgEl.innerHTML='<div class="msg msg-err">Upload failed</div>'; }
+}
+
+// ── CREATE BATCH ──
+async function createBatch() {
+  const examType  = document.getElementById('sched-type').value;
+  const batchName = document.getElementById('sched-batch').value.trim();
+  const startTime = document.getElementById('sched-start').value;
+  const duration  = parseInt(document.getElementById('sched-duration').value);
+  const capacity  = parseInt(document.getElementById('sched-capacity').value);
+  const msgEl     = document.getElementById('sched-msg');
+  if (!batchName||!startTime) { toast('Batch name and start time required','err'); return; }
+  msgEl.innerHTML = '<div class="msg msg-info">Creating...</div>';
+  try {
+    const r = await authFetch(`${API}/api/university/batches`,{
+      method:'POST',
+      body:JSON.stringify({exam_type:examType, batch_name:batchName, start_time:startTime+':00+05:30', duration_minutes:duration, capacity})
+    });
+    const d = await r.json();
+    if (d.success) { msgEl.innerHTML=`<div class="msg msg-ok">✓ ${d.message}</div>`; toast('Batch created','ok'); loadStats(); }
+    else { msgEl.innerHTML=`<div class="msg msg-err">✗ ${d.error}</div>`; }
+  } catch { msgEl.innerHTML='<div class="msg msg-err">Failed</div>'; }
+}
+
+// ── BATCHES ──
+async function loadBatches(examType) {
+  ['neet','jee'].forEach(e=>{ document.getElementById(`btog-${e}`).className='etog-btn'+(e===examType.toLowerCase()?' active':''); });
+  const c = document.getElementById('batch-list');
+  c.innerHTML = '<div style="font-size:12px;color:var(--muted)">Loading...</div>';
+  try {
+    const r = await authFetch(`${API}/api/university/batches/${examType}`);
+    const data = await r.json();
+    if (!data.length) { c.innerHTML='<div style="font-size:12px;color:var(--muted)">No batches yet.</div>'; return; }
+    c.innerHTML = data.map(b=>`
+      <div class="batch-item">
+        <div>
+          <div class="batch-name">${b.batch_name}</div>
+          <div class="batch-meta-row">${toIST(b.start_time)} · ${b.duration} min · ${b.enrolled}/${b.capacity} enrolled</div>
+        </div>
+        <div class="batch-actions">
+          <button class="btn btn-ghost btn-sm" onclick="sendReminders(${b.id},'${b.batch_name}')">⏰ Remind</button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadCSV(${b.id})">⬇ CSV</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteBatch(${b.id},'${b.batch_name}')">Delete</button>
+        </div>
+      </div>`).join('');
+  } catch { c.innerHTML='<div style="font-size:12px;color:var(--muted)">Error loading batches</div>'; }
+}
+
+function downloadCSV(bid) {
+  window.open(`${API}/api/university/batches/${bid}/csv`, '_blank');
+}
+
+async function deleteBatch(bid, name) {
+  if (!confirm(`Delete batch "${name}"? Only works if no students are enrolled.`)) return;
+  try {
+    const r = await authFetch(`${API}/api/university/batches/${bid}`,{method:'DELETE'});
+    const d = await r.json();
+    if (d.success) { toast('Batch deleted','ok'); loadBatches(document.getElementById('btog-neet').classList.contains('active')?'NEET':'JEE'); }
+    else toast(d.error,'err');
+  } catch { toast('Delete failed','err'); }
+}
+
+// ── STUDENTS ──
+async function loadStudents(examType) {
+  ['neet','jee'].forEach(e=>{ document.getElementById(`stog-${e}`).className='etog-btn'+(e===examType.toLowerCase()?' active':''); });
+  try {
+    const r = await authFetch(`${API}/api/university/students/${examType}`);
+    allStudents = await r.json();
+    renderStudents(allStudents);
+  } catch { document.getElementById('students-tbody').innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Error loading</td></tr>'; }
+}
+function renderStudents(data) {
+  const tbody = document.getElementById('students-tbody');
+  if (!data.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">No registrations yet</td></tr>'; return; }
+  tbody.innerHTML = data.map((s,i)=>`<tr>
+    <td style="color:var(--muted)">${i+1}</td>
+    <td><strong>${s.name}</strong></td>
+    <td class="mono" style="font-size:11px">${s.email}</td>
+    <td><span class="badge badge-${(s.exam_type||'').toLowerCase()}">${s.batch_name||'—'}</span></td>
+    <td class="mono truncate" title="${s.paper_hash}">${(s.paper_hash||'').substring(0,18)}…</td>
+    <td class="mono" style="font-size:11px">${toIST(s.registered_at)}</td>
+  </tr>`).join('');
+}
+function filterStudents() {
+  const q = document.getElementById('student-search').value.toLowerCase();
+  renderStudents(allStudents.filter(s=>
+    (s.name||'').toLowerCase().includes(q)||(s.email||'').toLowerCase().includes(q)||(s.batch_name||'').toLowerCase().includes(q)
+  ));
+}
+
+// ── SESSIONS ──
+async function loadSessions(examType) {
+  ['neet','jee'].forEach(e=>{ document.getElementById(`sestog-${e}`).className='etog-btn'+(e===examType.toLowerCase()?' active':''); });
+  const tbody = document.getElementById('sessions-tbody');
+  tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr>';
+  try {
+    const r = await authFetch(`${API}/api/university/exam-sessions/${examType}`);
+    const data = await r.json();
+    if (!data.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">No sessions yet</td></tr>'; return; }
+    tbody.innerHTML = data.map((s,i)=>`<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><strong>${s.name}</strong></td>
+      <td class="mono" style="font-size:11px">${s.email}</td>
+      <td><span class="badge badge-${(s.exam_type||'').toLowerCase()}">${s.batch_name}</span></td>
+      <td class="mono" style="font-size:11px">${toIST(s.started_at)}</td>
+      <td class="mono" style="font-size:11px">${toIST(s.submitted_at)}</td>
+      <td style="font-weight:600;text-align:center;font-family:'JetBrains Mono',monospace">${s.answers_count}</td>
+      <td><span class="badge ${s.submitted_at?'badge-ok':'badge-warn'}">${s.submitted_at?'✓ Submitted':'⏳ In Progress'}</span></td>
+    </tr>`).join('');
+  } catch { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted)">Error loading</td></tr>'; }
+}
+
+// ── LOGS ──
+async function loadLogs() {
+  const c = document.getElementById('log-list');
+  try {
+    const r = await authFetch(`${API}/api/university/logs`);
+    const data = await r.json();
+    if (!data.length) { c.innerHTML='<div style="font-size:12px;color:var(--muted)">No activity yet</div>'; return; }
+    const iconMap = {EXAM_SUBMIT:'📩',LOGIN:'🔑',SIGNUP:'✨',DEVICE_MISMATCH:'🚨',LOGIN_FAIL:'❌',EXAM_START:'▶'};
+    const cls     = {EXAM_SUBMIT:'submit',LOGIN:'login',SIGNUP:'signup',DEVICE_MISMATCH:'warn',LOGIN_FAIL:'warn',EXAM_START:'login'};
+    c.innerHTML = data.map(l=>`
+      <div class="log-row">
+        <div class="log-icon ${cls[l.action]||'login'}">${iconMap[l.action]||'📋'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="log-action">${l.action}</div>
+          <div class="log-detail">${l.name||'—'}${l.exam_type?' · '+l.exam_type:''}${l.detail?' · '+l.detail:''}</div>
+        </div>
+        <div class="log-time">${toIST(l.timestamp)}</div>
+      </div>`).join('');
+  } catch { c.innerHTML='<div style="font-size:12px;color:var(--muted)">Error loading logs</div>'; }
+}
+
+// ── SEND REMINDERS ──
+async function sendReminders(bid, bname) {
+  if (!confirm(`Send reminder emails to all students in "${bname}"?`)) return;
+  try {
+    const r = await authFetch(`${API}/api/university/send-reminders/${bid}`,{method:'POST'});
+    const d = await r.json();
+    if (d.success) toast(`⏰ Sent ${d.sent}/${d.total} reminders`,'ok');
+    else toast(d.error||'Failed','err');
+  } catch { toast('Failed','err'); }
+}
+
+// ── RESULT BATCHES ──
+async function loadResultBatches(examType) {
+  ['neet','jee'].forEach(e=>{ document.getElementById(`rtog-${e}`).className='etog-btn'+(e===examType.toLowerCase()?' active':''); });
+  const c = document.getElementById('result-batch-list');
+  document.getElementById('result-msg').innerHTML = '';
+  c.innerHTML = '<div style="font-size:12px;color:var(--muted)">Loading...</div>';
+  try {
+    const r = await authFetch(`${API}/api/university/batches/${examType}`);
+    const data = await r.json();
+    if (!data.length) { c.innerHTML='<div style="font-size:12px;color:var(--muted)">No batches yet.</div>'; return; }
+    c.innerHTML = data.map(b=>`
+      <div class="batch-item">
+        <div>
+          <div class="batch-name">${b.batch_name}</div>
+          <div class="batch-meta-row">${toIST(b.start_time)} · ${b.duration} min · ${b.enrolled} student(s) enrolled</div>
+        </div>
+        <div class="batch-actions">
+          <button class="btn btn-primary btn-sm" onclick="gradeBatch(${b.id},'${b.batch_name}','${examType}')">⚙ Grade</button>
+          <button class="btn btn-success btn-sm" onclick="publishResults(${b.id},'${b.batch_name}')">📧 Email Results</button>
+        </div>
+      </div>`).join('');
+  } catch { c.innerHTML='<div style="font-size:12px;color:var(--muted)">Error loading batches</div>'; }
+}
+
+// ── GRADE BATCH ──
+async function gradeBatch(batchId, batchName, examType) {
+  if (!confirm(`Grade all submitted answers for "${batchName}"?\n\nThis scores each student against the correct_answer column from your uploaded CSV.`)) return;
+  const msgEl = document.getElementById('result-msg');
+  msgEl.innerHTML = '<div class="msg msg-info">⚙ Grading...</div>';
+  try {
+    const r = await authFetch(`${API}/api/university/grade-batch/${batchId}`,{method:'POST',body:'{}'});
+    const d = await r.json();
+    if (d.success) {
+      msgEl.innerHTML = `<div class="msg msg-ok">✓ Graded ${d.graded} student(s) — results ready below.</div>`;
+      toast(`Graded ${d.graded} submission(s)`,'ok');
+      loadResults(examType||(document.getElementById('rtog-neet').classList.contains('active')?'NEET':'JEE'));
+    } else {
+      msgEl.innerHTML = `<div class="msg msg-err">✗ ${d.error}</div>`;
+    }
+  } catch { msgEl.innerHTML='<div class="msg msg-err">Grading failed — is Flask running?</div>'; }
+}
+
+// ── PUBLISH RESULTS (EMAIL STUDENTS) ──
+async function publishResults(batchId, batchName) {
+  if (!confirm(`Send result emails to all students in "${batchName}"?\n\nMake sure you have graded this batch first.`)) return;
+  const msgEl = document.getElementById('result-msg');
+  msgEl.innerHTML = '<div class="msg msg-info">📧 Sending result emails...</div>';
+  try {
+    const r = await authFetch(`${API}/api/university/publish-results/${batchId}`, {method:'POST', body:'{}'});
+    const d = await r.json();
+    if (d.success) {
+      msgEl.innerHTML = `<div class="msg msg-ok">✓ Emails sent to ${d.sent}/${d.total} student(s).</div>`;
+      toast(`📧 Results emailed to ${d.sent} student(s)`,'ok');
+    } else {
+      msgEl.innerHTML = `<div class="msg msg-err">✗ ${d.error}</div>`;
+    }
+  } catch { msgEl.innerHTML='<div class="msg msg-err">Failed to send emails — is Flask running?</div>'; }
+}
+
+// ── RESULTS TABLE ──
+async function loadResults(examType) {
+  ['neet','jee'].forEach(e=>{ document.getElementById(`rltog-${e}`).className='etog-btn'+(e===examType.toLowerCase()?' active':''); });
+  const tbody = document.getElementById('results-tbody');
+  try {
+    const r = await authFetch(`${API}/api/university/results/${examType}`);
+    const data = await r.json();
+    if (!data.length) {
+      tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">No results yet — grade a batch first</td></tr>';
+      document.getElementById('results-batch-label').textContent='No results yet';
+      document.getElementById('results-stat-row').style.display='none';
+      return;
+    }
+    const avg  = (data.reduce((s,r)=>s+(r.percentage||0),0)/data.length).toFixed(1);
+    const top  = ((data[0]?.percentage)||0).toFixed(1);
+    const pass = data.filter(r=>(r.percentage||0)>=40).length;
+    document.getElementById('results-batch-label').textContent=`${data.length} student(s) graded · Avg ${avg}% · Pass rate ${Math.round(pass/data.length*100)}%`;
+    document.getElementById('results-stat-row').innerHTML=`
+      <div class="result-stat"><div class="result-stat-val" style="color:var(--blue)">${top}%</div><div class="result-stat-label">Top Score</div></div>
+      <div class="result-stat"><div class="result-stat-val" style="color:var(--green)">${avg}%</div><div class="result-stat-label">Average</div></div>
+      <div class="result-stat"><div class="result-stat-val">${pass}/${data.length}</div><div class="result-stat-label">Passed (≥40%)</div></div>`;
+    document.getElementById('results-stat-row').style.display='flex';
+
+    function getGrade(p){if(p>=75)return['A','grade-a'];if(p>=55)return['B','grade-b'];if(p>=40)return['C','grade-c'];return['F','grade-f'];}
+
+    tbody.innerHTML = data.map((res,i)=>{
+      const pct = res.percentage||0;
+      const bar = pct>=75?'var(--green)':pct>=40?'var(--blue)':'var(--red)';
+      const [grade,gcls] = getGrade(pct);
+      return `<tr>
+        <td style="font-weight:700;color:var(--blue);text-align:center;font-family:'JetBrains Mono',monospace">#${i+1}</td>
+        <td><strong>${res.name}</strong></td>
+        <td class="mono" style="font-size:11px">${res.email}</td>
+        <td><span class="badge badge-${examType.toLowerCase()}">${res.batch_name}</span></td>
+        <td style="font-weight:700;font-family:'JetBrains Mono',monospace">${res.score}/${res.total}</td>
+        <td><div class="score-bar"><div class="score-bar-fill" style="width:${pct}%;background:${bar}"></div></div></td>
+        <td style="font-weight:700;color:${bar};font-family:'JetBrains Mono',monospace">${pct.toFixed(1)}%</td>
+        <td><span class="badge ${gcls}">${grade}</span></td>
+        <td class="mono truncate" style="max-width:120px" title="${res.result_hash||''}">${(res.result_hash||'').substring(0,14)}…</td>
+      </tr>`;
+    }).join('');
+  } catch { tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted)">Error loading results</td></tr>'; }
+}
+
+// ── UTILS ──
+function toIST(utcStr) {
+  if (!utcStr) return '—';
+  try {
+    const s = utcStr.endsWith('Z')||utcStr.includes('+')?utcStr:utcStr+'Z';
+    return new Date(s).toLocaleString('en-IN',{
+      timeZone:'Asia/Kolkata',day:'2-digit',month:'short',
+      year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true
+    })+' IST';
+  } catch { return utcStr; }
+}
+
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className=`toast toast-${type}`; t.style.display='block';
+  clearTimeout(t._t); t._t = setTimeout(()=>t.style.display='none', 4000);
+}
+</script>
+</body>
+</html>

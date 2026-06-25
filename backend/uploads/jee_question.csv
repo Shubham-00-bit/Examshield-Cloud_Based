@@ -1,0 +1,11 @@
+id,question,option_a,option_b,option_c,option_d,correct_answer,subject,exam_type
+1,"What is the derivative of sin(x)?","cos(x)","-cos(x)","tan(x)","-sin(x)","cos(x)","Mathematics","JEE"
+2,"Which law states Force = Mass × Acceleration?","Newton's First Law","Newton's Second Law","Newton's Third Law","Law of Gravitation","Newton's Second Law","Physics","JEE"
+3,"The resistance of a conductor is measured in?","Ampere","Volt","Ohm","Watt","Ohm","Physics","JEE"
+4,"What is the chemical formula for water?","H2O","CO2","NaCl","HCl","H2O","Chemistry","JEE"
+5,"In a circuit, V=IR is known as?","Kirchhoff's Law","Faraday's Law","Ohm's Law","Coulomb's Law","Ohm's Law","Physics","JEE"
+6,"The integral of 1/x is?","x","ln(x)","1/x^2","x^2","ln(x)","Mathematics","JEE"
+7,"What is the speed of light in vacuum?","3×10^6 m/s","3×10^8 m/s","3×10^10 m/s","3×10^12 m/s","3×10^8 m/s","Physics","JEE"
+8,"Which element has the symbol Fe?","Fluorine","Iron","Francium","Fermium","Iron","Chemistry","JEE"
+9,"sin²θ + cos²θ equals?","0","1","2","sin(2θ)","1","Mathematics","JEE"
+10,"What is the valency of Oxygen?","1","2","3","4","2","Chemistry","JEE"

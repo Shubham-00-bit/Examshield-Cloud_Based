@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ExamShield — Blockchain Exam Protection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060810;
+    --surface: #0d1117;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8edf5;
+    --muted: #4a5568;
+    --accent: #4f8ef7;
+    --accent2: #22c7a0;
+    --glow: rgba(79,142,247,0.15);
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* ── RADIAL GLOWS ── */
+  .glow-1 {
+    position: fixed; top: -200px; left: -200px; z-index: 0;
+    width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(79,142,247,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    animation: driftA 18s ease-in-out infinite alternate;
+  }
+  .glow-2 {
+    position: fixed; bottom: -100px; right: -100px; z-index: 0;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(34,199,160,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    animation: driftB 22s ease-in-out infinite alternate;
+  }
+  @keyframes driftA { to { transform: translate(80px, 60px); } }
+  @keyframes driftB { to { transform: translate(-60px, -40px); } }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 56px; height: 64px;
+    background: rgba(6,8,16,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 800;
+    letter-spacing: 3px; color: var(--text);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: grid; place-items: center;
+    font-size: 15px;
+    box-shadow: 0 0 16px rgba(79,142,247,0.4);
+  }
+  .nav-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    padding: 5px 14px; border-radius: 20px;
+    border: 1px solid rgba(79,142,247,0.3);
+    color: var(--accent);
+    background: rgba(79,142,247,0.06);
+  }
+
+  /* ── WRAPPER ── */
+  .wrap { position: relative; z-index: 1; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+    opacity: 0; animation: fadeUp 0.6s 0.1s forwards;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(52px, 9vw, 110px);
+    font-weight: 800; line-height: 0.95;
+    letter-spacing: -3px;
+    margin-bottom: 32px;
+    opacity: 0; animation: fadeUp 0.7s 0.2s forwards;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 17px; color: var(--muted);
+    max-width: 480px; line-height: 1.75;
+    margin: 0 auto 64px;
+    font-weight: 300;
+    opacity: 0; animation: fadeUp 0.7s 0.35s forwards;
+  }
+
+  /* ── PORTAL CARDS ── */
+  .portals {
+    display: flex; gap: 20px; justify-content: center;
+    flex-wrap: wrap;
+    opacity: 0; animation: fadeUp 0.7s 0.5s forwards;
+  }
+  .portal {
+    position: relative;
+    width: 280px; padding: 36px 30px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.025);
+    text-decoration: none; color: var(--text);
+    transition: all 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+  }
+  .portal::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--glow), transparent 60%);
+    opacity: 0; transition: opacity 0.35s;
+  }
+  .portal:hover { transform: translateY(-6px); border-color: rgba(79,142,247,0.3); }
+  .portal:hover::before { opacity: 1; }
+  .portal.green::before { background: linear-gradient(135deg, rgba(34,199,160,0.12), transparent 60%); }
+  .portal.green:hover { border-color: rgba(34,199,160,0.3); }
+
+  .portal-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .portal-icon { font-size: 36px; margin-bottom: 16px; display: block; }
+  .portal h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .portal p {
+    font-size: 13px; color: var(--muted); line-height: 1.65;
+    margin-bottom: 28px; font-weight: 300;
+  }
+  .portal-cta {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 1.5px; font-weight: 500;
+    color: var(--accent);
+  }
+  .portal.green .portal-cta { color: var(--accent2); }
+  .portal-cta::after {
+    content: '→';
+    transition: transform 0.25s;
+  }
+  .portal:hover .portal-cta::after { transform: translateX(4px); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    width: 100%; max-width: 900px; margin: 80px auto 0;
+    height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  /* ── FEATURES ── */
+  .features {
+    padding: 80px 24px;
+    max-width: 960px; margin: 0 auto;
+  }
+  .feat-header {
+    text-align: center; margin-bottom: 56px;
+    opacity: 0; animation: fadeUp 0.7s 0.2s both;
+  }
+  .feat-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px; font-weight: 800;
+    margin-bottom: 10px;
+  }
+  .feat-header p { font-size: 14px; color: var(--muted); }
+
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+  }
+  .feat {
+    padding: 28px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .feat:hover {
+    border-color: rgba(79,142,247,0.2);
+    background: rgba(79,142,247,0.03);
+  }
+  .feat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--accent);
+    letter-spacing: 2px; margin-bottom: 14px;
+  }
+  .feat h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .feat p {
+    font-size: 13px; color: var(--muted);
+    line-height: 1.7; font-weight: 300;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 40px 24px;
+    border-top: 1px solid var(--border);
+  }
+  footer p {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 24px; }
+    .portal { width: 100%; max-width: 340px; }
+  }
+</style>
+</head>
+<body>
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">🛡️</div>
+    EXAMSHIELD
+  </a>
+  <div class="nav-pill">BLOCKCHAIN SECURED</div>
+</nav>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-eyebrow">India's Anti-Leak Exam Infrastructure</div>
+    <h1>Stop Paper<br/><em>Leaks</em><br/>Forever</h1>
+    <p class="hero-sub">Cryptographic hashes. Immutable blockchain records. Every student gets a unique, tamper-proof exam paper.</p>
+
+    <div class="portals">
+      <a href="/university" class="portal">
+        <div class="portal-num">01 / ADMIN</div>
+        <span class="portal-icon">🎓</span>
+        <h2>University Portal</h2>
+        <p>Upload MCQ papers, create exam batches, manage registrations, and push everything on-chain.</p>
+        <div class="portal-cta">ENTER PORTAL</div>
+      </a>
+      <a href="/candidate" class="portal green">
+        <div class="portal-num">02 / STUDENT</div>
+        <span class="portal-icon">📝</span>
+        <h2>Candidate Portal</h2>
+        <p>Register for NEET or JEE, get your unique paper hash by email, and access your shuffled exam.</p>
+        <div class="portal-cta">REGISTER / LOGIN</div>
+      </a>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="features">
+    <div class="feat-header">
+      <h2>How It Works</h2>
+      <p>Six layers of protection — no single point of failure</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat">
+        <div class="feat-num">01</div>
+        <h3>Unique Paper Per Student</h3>
+        <p>Same questions, different order for every candidate. Copying answers becomes impossible.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">02</div>
+        <h3>Immutable On-Chain Records</h3>
+        <p>Every exam creation and registration is stored on Ethereum — tamper-proof, forever verifiable.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">03</div>
+        <h3>Time-Locked Access</h3>
+        <p>Papers only unlock during the exact scheduled window. Early access is cryptographically impossible.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">04</div>
+        <h3>Device Fingerprinting</h3>
+        <p>Candidates are bound to the device they registered from. No proxy, no switching, no sharing.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">05</div>
+        <h3>NEET &amp; JEE Isolated</h3>
+        <p>Fully separate pipelines, databases, and blockchain records for each exam type.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">06</div>
+        <h3>Full Audit Trail</h3>
+        <p>Every login, device mismatch, and submission is logged with timestamp and IP address.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>ExamShield — Powered by Ethereum (Ganache) + Solidity + Flask + Python</p>
+  </footer>
+</div>
+</body>
+</html>

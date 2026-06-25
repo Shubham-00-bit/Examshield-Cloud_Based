@@ -1,0 +1,15 @@
+{
+  "name": "exam-shield",
+  "version": "1.0.0",
+  "description": "Blockchain-based exam paper leak prevention system",
+  "scripts": {
+    "ganache": "ganache-cli --port 7545 --deterministic",
+    "compile": "truffle compile",
+    "migrate": "truffle migrate --reset --network development",
+    "backend": "cd backend && python app.py"
+  },
+  "devDependencies": {
+    "truffle": "^5.11.0",
+    "ganache-cli": "^6.12.2"
+  }
+}

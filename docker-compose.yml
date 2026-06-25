@@ -1,0 +1,92 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: examshield_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-examshield}
+      POSTGRES_USER:     ${POSTGRES_USER:-examuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - examshield_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-examuser} -d ${POSTGRES_DB:-examshield}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Flask Backend ───────────────────────────────────────────────────────────
+  backend:
+    image: ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG:-latest}
+    container_name: examshield_backend
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      FLASK_ENV:         production
+      DATABASE_URL:      postgresql://${POSTGRES_USER:-examuser}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-examshield}
+      SECRET_KEY:        ${SECRET_KEY}
+      BREVO_API_KEY:     ${BREVO_API_KEY}
+      GANACHE_URL:       ${GANACHE_URL:-http://ganache:8545}
+    volumes:
+      - uploads_data:/app/uploads
+      - ./backend/data:/app/data  # CSV/JSON exam data (read-only in prod)
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - examshield_net
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region:        ap-south-1
+        awslogs-group:         /examshield/backend
+        awslogs-stream-prefix: backend
+
+  # ── Nginx Reverse Proxy ─────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: examshield_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    networks:
+      - examshield_net
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region:        ap-south-1
+        awslogs-group:         /examshield/nginx
+        awslogs-stream-prefix: nginx
+
+  # ── CloudWatch Agent ────────────────────────────────────────────────────────
+  cloudwatch-agent:
+    image: amazon/cloudwatch-agent:latest
+    container_name: examshield_cwagent
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/cloudwatch-config.json:/etc/cwagent/config.json:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - cw_credentials:/root/.aws:ro
+    environment:
+      AWS_DEFAULT_REGION: ap-south-1
+    networks:
+      - examshield_net
+
+volumes:
+  postgres_data:
+  uploads_data:
+  cw_credentials:
+
+networks:
+  examshield_net:
+    driver: bridge
