@@ -105,9 +105,7 @@ jobs:
         env:
           KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          cat > key.pem <<EOF
-${KEY}
-EOF
+          printf "%s" "$KEY" > key.pem
 
           chmod 600 key.pem
 
