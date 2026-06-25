@@ -103,7 +103,7 @@ jobs:
           key:         ${{ secrets.EC2_SSH_KEY }}
           script: |
             # Pull latest image
-            aws ecr get-login-password --region ap-south-1 \
+            aws ecr get-login-password --region us-east-2 \
               | docker login --username AWS --password-stdin \
                 ${{ steps.login-ecr.outputs.registry }}
 
@@ -114,9 +114,9 @@ jobs:
             echo "ECR_REPO=${{ env.ECR_REPO }}" >> .env
 
             # Zero-downtime rolling deploy
-            dockercompose pull backend
+            docker compose pull backend
             docker compose up -d --no-deps backend
-            docker ompose up -d --no-deps nginx
+            docker compose up -d --no-deps nginx
 
             # Health check — wait up to 30s
             for i in $(seq 1 6); do
