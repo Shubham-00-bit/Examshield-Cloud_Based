@@ -105,38 +105,28 @@ jobs:
           KEY: ${{ secrets.EC2_SSH_KEY }}  
       
 
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host:        ${{ secrets.EC2_HOST }}
-          username:    ubuntu
-          key:         ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            # Pull latest image
-            aws ecr get-login-password --region us-east-2 \
-              | docker login --username AWS --password-stdin \
-                ${{ steps.login-ecr.outputs.registry }}
+            - name: Validate EC2_SSH_KEY
+        shell: bash
+        env:
+          KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          echo "Length: ${#KEY}"
 
-            # Update image tag in env
-            cd /home/ubuntu/Examshield-Cloud_Based
-            echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> .env
-            echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> .env
-            echo "ECR_REPO=${{ env.ECR_REPO }}" >> .env
+          if [ -z "$KEY" ]; then
+            echo "ERROR: Secret is empty"
+            exit 1
+          fi
 
-            # Zero-downtime rolling deploy
-            docker compose pull backend
-            docker compose up -d --no-deps backend
-            docker compose up -d --no-deps nginx
+          printf "%s" "$KEY" > key.pem
 
-            # Health check — wait up to 30s
-            for i in $(seq 1 6); do
-              if curl -sf http://localhost/health; then
-                echo "✅ Deploy successful"
-                break
-              fi
-              echo "⏳ Waiting for health check... ($i/6)"
-              sleep 5
-            done
+          echo "First line:"
+          head -1 key.pem
 
-            # Clean up old images to save disk space on t2/t3.micro
-            docker image prune -f
+          echo "Last line:"
+          tail -1 key.pem
+
+          chmod 600 key.pem
+
+          ssh-keygen -y -f key.pem >/dev/null
+
+          echo "✅ Private key is valid"
