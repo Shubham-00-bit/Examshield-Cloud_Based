@@ -95,12 +95,15 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG" >> $GITHUB_OUTPUT
         id: build-image
         
-         - name: Debug SSH secret
+        
+        
+      - name: Debug SSH secret
         run: |
           echo "Length: ${#KEY}"
           echo "$KEY" | head -1
         env:
-          KEY: ${{ secrets.EC2_SSH_KEY }}
+          KEY: ${{ secrets.EC2_SSH_KEY }}  
+      
 
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
